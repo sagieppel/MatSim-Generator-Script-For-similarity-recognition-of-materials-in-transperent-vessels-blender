@@ -2,12 +2,11 @@
 
 
 ## Description:
-# This script will procedurally generate images of randomly shaped transparent vessels with random objects or simulated liquid inside the vessel. 
-
-#Images, Depth maps, Normal maps, and material properties will be saved to the output folder. Images of the vessel content without vessel and vessel without content will also be saved. 
+# This script will procedurally generate images of randomly shaped transparent vessels with random objects or simulated liquid inside the vessel with gradual transfomration of material on the object content for the matsim dataset. 
 
 
-#### This was run with Blender 3.0 with no additional add-ons
+
+#### This was run with Blender 3.4 with no additional add-ons
 
 ### Where to start: 
 #The best place to start is in the “Main” section in the last part of this script.
@@ -21,19 +20,16 @@
 #3) Set Path HDRI_BackGroundFolder," parameter set path to where the background HDRI (for a start, use the example HDRI_BackGround, supplied)
 #4) In the "PBRMaterialsFolder" parameter set path to where the PBR materials (for a start, use the example PBRMaterials folder supplied)
 #5) In the "ObjectsFolder" parameter, set the path to where the objects file are saved (for a start, use the example object folder supplied).
-#6) Run the script from Blender or run the script from the command line using: "blender DatasetGeneration.blend -b -P DatasetGeneration.py"
+#6) Run the script from Blender or run the script from the command line 
 #Images should start appearing in the OutFolder after few minutes (depending on the rendering file). 
 #Note that while running, Blender will be paralyzed.
 
 ## Additional parameters 
 #(in the “Input parameters” of "Main" python script  (near the end of this file)
-#"NumSimulationsToRun" determines how many different environments to render into images (How many different images will be created).
-# ContentMode  Will determine the type of content that will be generated insid the vessel 
-#"Liquid": liquid simulation inside the vessel (simulation can be time consuming)
+#"NumSimulationsToRun" determines how many different environments to render into images (How many different sets will be created).
+# ContentMode  Will determine the type of content that will be generated insid the vessel liquid or objce
 #"Objects":   objects inside the vessel (objects will be taken from the Objects folder)
 #"FlatLiquid": will create simple liquid with flat surface that fill the bottum of the vessel (no liquid simulation will be performed)
-
-## Once finished you need to use VirtualDataSetEditCleanAndAddMasks.py to on the output to actually generated the segmentation mask (this can run from any python)
 ###############################Dependcies######################################################################################3
 
 import bpy
@@ -64,7 +60,7 @@ import colorsys
 #                                    Main 
 
 ###################################################################################################################################################################
-# generate scence with random vessel containing either a fluid or an object inside it and save to file
+
 # Example HDRI_BackGroundFolder and PBRMaterialsFolder  and ObjectsFolder folders should be in the same folder as the script. 
 #------------------------Input parameters---------------------------------------------------------------------
 
@@ -89,7 +85,7 @@ import colorsys
 ##r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
 #image_dir=r"/home/breakeroftime/Documents/Datasets/ADE20K_Parts_Pointer/Eval/Image/"
 
-UseGPU_CUDA=True
+#UseGPU_CUDA=True
 ##ContentMode= "Object" 
  
 
@@ -98,9 +94,16 @@ UseGPU_CUDA=True
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
+
+#------------------Input parameters--------------------------------------------------------------------------------------
+OutFolder=homedir+r"/Output/"# Where output images will be saved
+HDRI_BackGroundFolder="HDRI_BackGround/"# Background hdri folder
+ObjectFolder=r"Objects/" # Folder with objects
+pbr_folders = ['PBRMaterials/'] # folders with PBR materiall each folder will be use with equal chance
+UseGPU_CUDA=True
 NumSimulationsToRun=20# Number of sets to render
 DontOveride=True # dont overide existing renders
-ContentMode = "Object" #"FlatLiquid" #Type of content that will be generated insid the vessel can be "FlatLiquid" or an "Object"
+ContentMode = "FlatLiquid"#"Object" #"FlatLiquid" #Type of content that will be generated insid the vessel can be "FlatLiquid" or an "Object"
 use_priodical_exits = False# Exit blender once every few sets to avoid memory leaks, assuming that the script is run inside Run.sh loop that will imidiatly restart blender fresh
 
 #------------------Create PBR list-------------------------------------------------------- 
@@ -178,9 +181,11 @@ scounter=0 # Counter For breaking and exiting program once in a while (to clean 
 for cnt in range(NumSimulationsToRun):
 #-------------------------------------------------------------------   
     MainOutputFolder=OutFolder+"/"+str(cnt)
+    print("1) make dir")
     if  os.path.exists(MainOutputFolder) and DontOveride: continue # Dont over run existing folder continue from where you started
     os.mkdir(MainOutputFolder)
 #----------Select method to uv map material into object surface-----------------------------------
+    print("2 select materials and mapping")
     if random.random()<0.8: #  'camera' 'generated' 'object'
        uv='camera'
     else: 
@@ -214,6 +219,7 @@ for cnt in range(NumSimulationsToRun):
 ###################################################################################
 #---------------------Create scenes containing transition between the two materials choosed--------------------------------------------   
     RotateMaterial= random.random()<0.7 # rotate material between frames
+    print("3) start making scene")
     for nscenes in range(6): # different scenes same materials each scene will contain gradual transition between the materials on single or sevral objects
         MainOutputFolder
         print("Add material")
@@ -224,11 +230,11 @@ for cnt in range(NumSimulationsToRun):
         
         
      #   if os.path.exists(CatcheFolder): shutil.rmtree(CatcheFolder)# Delete liquid simulation folder to free space
-        if NumSimulationsToRun==0: break
+     ##   if NumSimulationsToRun==0: break
         OutputFolder= MainOutputFolder+"/Scene_"+str(nscenes)+"/"
-        if  os.path.exists(OutputFolder): continue # Dont over run existing folder continue from where you started
+    #    if  os.path.exists(OutputFolder): continue # Dont over run existing folder continue from where you started
         os.mkdir(OutputFolder) 
-        NumSimulationsToRun-=1
+###        NumSimulationsToRun-=1
 
         ContentMaterial={"TYPE":"NONE"}
 
@@ -236,7 +242,7 @@ for cnt in range(NumSimulationsToRun):
         print("=========================Start====================================")
         print("Simulation number:"+str(cnt)+" Remaining:"+ str(NumSimulationsToRun))
         SetScene.CleanScene()  # Delete all objects in scence
-    
+        print("4) load object and content and set scnee") 
       
     #    #------------------------------Create random vessel object and assign  material to it---------------------------------
         MaxXY,MaxZ,MinZ,VesselWallThikness,ContentHeight=VesselGen.AddVessel("Vessel","Content",ScaleFactor=1, SimpleLiquid=(ContentMode=="FlatLiquid")) # Create Vessel object named "Vessel" and add to scene also create mesh inside the vessel ("Content) which will be transformed to liquid
@@ -300,7 +306,9 @@ for cnt in range(NumSimulationsToRun):
 # Generate images of same scene with different materials ratio
 
 ##########################################################################################################################        
+        print("5) rendner gradual tranisition")
         for matsRatio in [0,0.25,0.5,0.75,1]:      
+                print("materials ratio",matsRatio)
             #------------Modify scene scene----------------------------------------------------------------------------------  
                 if nscenes>1: 
                     SetScene.RandomRotateBackground() # for scene beyond 2 start randomly  rotating background between scenes

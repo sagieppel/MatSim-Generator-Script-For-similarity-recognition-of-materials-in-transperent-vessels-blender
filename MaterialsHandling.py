@@ -40,7 +40,7 @@ def RandPow(n):
 ####################################################################################################################################
 def BSDFMaterialToDictionary(Mtr):
     dic={}
-    if not hasattr(Mtr,"node_tree"): dic
+    if not hasattr(Mtr,"node_tree"): return dic
     bsdf=Mtr.node_tree.nodes["Principled BSDF"]
     
     dic["TYPE"]="Principled BSDF"
