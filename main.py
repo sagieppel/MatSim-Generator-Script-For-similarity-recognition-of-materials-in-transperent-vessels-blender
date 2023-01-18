@@ -72,33 +72,35 @@ import colorsys
 # Recomand nto use absolute and not relative paths  as blender is not good with these
 
  
-OutFolder=homedir+r"/Output/"# Where output images will be saved
-
-# Background hdri folder
-HDRI_BackGroundFolder="HDRI_BackGround/"
- 
-#ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ShapeNetCoreV2/"
-#Folder of objects (like shapenet) 
-ObjectFolder=r"Objects/"
-pbr_folders = ['PBRMaterials/'] # folders with PBR materiall each folder will be use with equal chance
-
-
-
-
+#HDRI_BackGroundFolder=r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
+##
+##"HDRI_BackGround/"
+##r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
+##ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ShapeNetCoreV2/"
+##Folder of objects (like shapenet) 
+#ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ObjectGTLF_NEW/" 
+##r"Objects/"
+##r"/home/breakeroftime/Documents/Datasets/Shapenet/ObjectGTLF_NEW/" 
+## folder where out put will be save
+#OutFolder="OutFolder_OBJ_IN_VESSELS/" # folder where out put will be save
+#pbr_folders = [r"/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR/",
+#r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
+##r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
+##r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
+#image_dir=r"/home/breakeroftime/Documents/Datasets/ADE20K_Parts_Pointer/Eval/Image/"
 
 UseGPU_CUDA=True
 ##ContentMode= "Object" 
  
 
-#####use_priodical_exits = True # Exit blender once every few sets to avoid memory leaks, assuming that the script is run inside Run.sh loop that will imidiatly restart blender fresh
- 
 #pbr_folders = [ 
 #r"/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR/",
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
 #r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
-
-ContentMode = "FlatLiquid"# Type of content that will be generated insid the vessel can be FlatLiquid or an OBject
+NumSimulationsToRun=20# Number of sets to render
+DontOveride=True # dont overide existing renders
+ContentMode = "Object" #"FlatLiquid" #Type of content that will be generated insid the vessel can be "FlatLiquid" or an "Object"
 use_priodical_exits = False# Exit blender once every few sets to avoid memory leaks, assuming that the script is run inside Run.sh loop that will imidiatly restart blender fresh
 
 #------------------Create PBR list-------------------------------------------------------- 
@@ -120,7 +122,7 @@ for hname in os.listdir(HDRI_BackGroundFolder):
 
 
 
-NumSimulationsToRun=100000000000              # Number of images to render
+
 
 
 
@@ -172,10 +174,11 @@ if UseGPU_CUDA:
 
 ######################Main loop for creating images##########################################################
 # loop 1: choose pair of materials, loop 2, create vessel content and scene, loop 3: change materials ration and render
+scounter=0 # Counter For breaking and exiting program once in a while (to clean the system, its complicated)
 for cnt in range(NumSimulationsToRun):
 #-------------------------------------------------------------------   
     MainOutputFolder=OutFolder+"/"+str(cnt)
-    if  os.path.exists(MainOutputFolder): continue # Dont over run existing folder continue from where you started
+    if  os.path.exists(MainOutputFolder) and DontOveride: continue # Dont over run existing folder continue from where you started
     os.mkdir(MainOutputFolder)
 #----------Select method to uv map material into object surface-----------------------------------
     if random.random()<0.8: #  'camera' 'generated' 'object'
@@ -240,7 +243,7 @@ for cnt in range(NumSimulationsToRun):
         VesselMaterial=Materials.AssignMaterialToVessel("Vessel") # assign random material to vessel object
         if ContentMode == "Object": # Add object as vessel content
                bpy.data.objects.remove( bpy.data.objects["Content"]) # Remove original content (generated with the vessel)
-               ContentNames=Objects.LoadNObjectsInsideVessel(ObjectList,MaxXY-VesselWallThikness,MinZ,MaxZ,NumObjects=1) # Put random objects in vessel
+               ContentNames=Objects.LoadNObjectsInsideVessel(ObjectList,MaxXY-VesselWallThikness,MinZ,MaxZ,NumObjects=random.randint(1,3)) # Put random objects in vessel
                bpy.data.objects[ContentNames[0]].name="Content"
                
                # remove overlapping faceses
@@ -390,5 +393,11 @@ for cnt in range(NumSimulationsToRun):
  #   if os.path.exists(CatcheFolder): shutil.rmtree(CatcheFolder)# Delete liquid simulation catche folder to free space
     print("========================Finished==================================")
     SetScene.CleanScene()  # Delete all objects in scence
-      #  break
-#
+    scounter+=1
+    if use_priodical_exits and scounter>=12: # Break program and exit blender, allow blender to remove junk, otherwise the program might start to slow down (assume it run in loop inside run.sh)
+            #  print("Resting for a minute")
+            #  time.sleep(30)
+              break
+if use_priodical_exits:
+   print("quit by priodic exit")
+   bpy.ops.wm.quit_blender()

@@ -39,8 +39,10 @@ def RandPow(n):
 
 ####################################################################################################################################
 def BSDFMaterialToDictionary(Mtr):
-    bsdf=Mtr.node_tree.nodes["Principled BSDF"]
     dic={}
+    if not hasattr(Mtr,"node_tree"): dic
+    bsdf=Mtr.node_tree.nodes["Principled BSDF"]
+    
     dic["TYPE"]="Principled BSDF"
     dic["Name"]=Mtr.name
     dic["Base Color"]=(bsdf.inputs[0].default_value)[:]## = (0.0892693, 0.0446506, 0.137255, 1)
@@ -642,7 +644,7 @@ def load_transparent_BSDF_material(stem):
 
 
     
-    return BSDFMaterialToDictionary(stem)    
+    return BSDFMaterialToDictionary_2(stem)    
 
 
 #######################################################################################################
