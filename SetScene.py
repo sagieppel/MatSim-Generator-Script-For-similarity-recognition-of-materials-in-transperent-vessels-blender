@@ -34,6 +34,76 @@ def RandPow(n):
     return r
 
 
+##############################################################
+
+# Add  multiple point lights to scene
+
+##############################################################
+def add_random_point_light(box_min = (-9, -9, -9),box_max = (9, 9, 9),intensity_min=20000,intensity_max=500000):
+     (x1, y1, z1) = box_min
+     (x2, y2, z2) = box_max
+     assert (x1<=x2 and y1<=y2 and z1<=z2)
+     min_dist = min(x2-x1,y2-y1,z2-z1)    
+     # center only relevant for spot light
+     (c1,c2,c3) = ((x1+x2)/2, (y1+y2)/2, (z1+z2)/2)
+     (d1,d2,d3) = ((x2-x1)*.05,(y2-y1)*.05,(z2-z1)*.05)
+#-------Delete existing light sources-------------------------------------------------------- 
+     print("adding light source")
+     bpy.ops.object.select_by_type(type='LIGHT')
+     bpy.ops.object.delete()
+
+     while(True):
+        #---------Select random position------------------------------------------------- 
+        x = random.uniform(x1, x2)
+        y = random.uniform(y1, y2)
+        z = random.uniform(z1, z2)
+
+        
+        # Random intensity
+        intensity = random.uniform(intensity_min, intensity_max)
+        radius = 0.0
+        # Random size (radius)
+        if random.random() > 0.5: 
+             radius = random.uniform(0, min_dist/10)
+             if random.random() <0.2:
+                    radius = random.uniform(0, 3)
+        # Random rotation (direction
+        
+      #  size = random.uniform(size_min, size_max)
+        # source type
+        if np.random.rand()<0.5:
+            ptype='POINT'
+        else:
+            ptype='SPOT'
+        
+        # Directopm    
+        direction = None
+        
+        # Create a new point light
+        bpy.ops.object.light_add(type=ptype, radius=radius, align='WORLD', location=(x,y,z))
+        new_light = bpy.context.active_object
+        
+        if (ptype=='SPOT'):
+             # add 5% noise to not always directly look at center of BB
+             (n1,n2,n3) = (random.uniform(-d1,d1), random.uniform(-d2,d2), random.uniform(-d3,d3))
+             (p1,p2,p3) = (c1+n1,c2+n2,c3+n3)
+         # Set the light direction
+             new_light.rotation_euler = (p1,p2,p3)
+             if np.random.rand()<0.4:
+                      new_light.rotation_euler = [random.uniform(-3.14159, 3.14159) for _ in range(3)]
+             new_light.data.spot_size=radius
+        
+        # Set the light intensity
+        new_light.data.energy = intensity
+        if np.random.rand()<0.5: break
+     print("done adding light source")
+
+
+## Add new random lights
+#for _ in range(num_lights):
+#    add_random_point_light()
+
+
 ###############################################################################################################################
 
 ##==============Clean secene remove  all objects currently on the schen============================================
@@ -41,6 +111,11 @@ def RandPow(n):
 ###############################################################################################################################
 
 def CleanScene():
+    print("cleaning scene")
+    # Clear existing lights in the scene
+    bpy.ops.object.select_by_type(type='LIGHT')
+    bpy.ops.object.delete()
+
     for bpy_data_iter in (
             bpy.data.objects,
             bpy.data.meshes,
@@ -59,6 +134,8 @@ def CleanScene():
        print(mes)
     for mes in allMeshes:
         bpy.data.meshes.remove(mes)
+    bpy.ops.outliner.orphans_purge(num_deleted=630, do_local_ids=True, do_linked_ids=True, do_recursive=True)
+    print("Done cleaning")
 
 ################################################################################################################################3
 
@@ -68,7 +145,12 @@ def CleanScene():
 
 ##################################
 ###################################################################################################3
-def AddBackground(hdr_list): 
+def AddBackground(hdr_list):
+    print("cleaning scene")
+    # Clear existing lights in the scene
+    bpy.ops.object.select_by_type(type='LIGHT')
+    bpy.ops.object.delete()
+ 
     bpy.context.scene.world= bpy.data.worlds['World']
 
           

@@ -64,44 +64,28 @@ import colorsys
 # Example HDRI_BackGroundFolder and PBRMaterialsFolder  and ObjectsFolder folders should be in the same folder as the script. 
 #------------------------Input parameters---------------------------------------------------------------------
 
-# Example HDRI_BackGroundFolder and PBRMaterialsFolder  and ObjectsFolder folders should be in the same folder as the script. 
-# Recomand nto use absolute and not relative paths  as blender is not good with these
-
- 
-#HDRI_BackGroundFolder=r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
-##
-##"HDRI_BackGround/"
-##r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
-##ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ShapeNetCoreV2/"
-##Folder of objects (like shapenet) 
+HDRI_BackGroundFolder=r"HDRI_BackGround/"
+#r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
+#ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ShapeNetCoreV2/"
+#Folder of objects (like shapenet) 
+ObjectFolder=r"Objects/"
 #ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ObjectGTLF_NEW/" 
-##r"Objects/"
-##r"/home/breakeroftime/Documents/Datasets/Shapenet/ObjectGTLF_NEW/" 
-## folder where out put will be save
-#OutFolder="OutFolder_OBJ_IN_VESSELS/" # folder where out put will be save
-#pbr_folders = [r"/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR/",
-#r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
-##r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
-##r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
-#image_dir=r"/home/breakeroftime/Documents/Datasets/ADE20K_Parts_Pointer/Eval/Image/"
-
-#UseGPU_CUDA=True
-##ContentMode= "Object" 
- 
-
-#pbr_folders = [ 
-#r"/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR/",
-#r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
-#r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/',
-#r'/media/breakeroftime/9be0bc81-09a7-43be-856a-45a5ab241d90/NormalizedPBR_MERGED/']
-
-#------------------Input parameters--------------------------------------------------------------------------------------
-OutFolder=homedir+r"/Output/"# Where output images will be saved
-HDRI_BackGroundFolder="HDRI_BackGround/"# Background hdri folder
-ObjectFolder=r"Objects/" # Folder with objects
+# folder where out put will be save
+OutFolder="OutFolder/" # folder where out put will be save
 pbr_folders = ['PBRMaterials/'] # folders with PBR materiall each folder will be use with equal chance
+#pbr_folders = [r"/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR/",
+#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/',
+#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/',
+#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/']
+
+NumSetsToRender=100
+#------------------Input parameters--------------------------------------------------------------------------------------
+#OutFolder=homedir+r"/Output/"# Where output images will be saved
+#HDRI_BackGroundFolder="HDRI_BackGround/"# Background hdri folder
+#ObjectFolder=r"Objects/" # Folder with objects
+#pbr_folders = ['PBRMaterials/'] # folders with PBR materiall each folder will be use with equal chance
 UseGPU_CUDA=True
-NumSimulationsToRun=20# Number of sets to render
+#NumSimulationsToRun=20# Number of sets to render
 DontOveride=True # dont overide existing renders
 ContentMode = "FlatLiquid"#"Object" #"FlatLiquid" #Type of content that will be generated insid the vessel can be "FlatLiquid" or an "Object"
 use_priodical_exits = False# Exit blender once every few sets to avoid memory leaks, assuming that the script is run inside Run.sh loop that will imidiatly restart blender fresh
@@ -178,7 +162,7 @@ if UseGPU_CUDA:
 ######################Main loop for creating images##########################################################
 # loop 1: choose pair of materials, loop 2, create vessel content and scene, loop 3: change materials ration and render
 scounter=0 # Counter For breaking and exiting program once in a while (to clean the system, its complicated)
-for cnt in range(NumSimulationsToRun):
+for cnt in range(NumSetsToRender):
 #-------------------------------------------------------------------   
     MainOutputFolder=OutFolder+"/"+str(cnt)
     print("1) make dir")
@@ -240,7 +224,7 @@ for cnt in range(NumSimulationsToRun):
 
     #    #================================Run simulation and rendering=============================================================================
         print("=========================Start====================================")
-        print("Simulation number:"+str(cnt)+" Remaining:"+ str(NumSimulationsToRun))
+        print("Simulation number:"+str(cnt)+" Remaining:"+ str(NumSetsToRender))
         SetScene.CleanScene()  # Delete all objects in scence
         print("4) load object and content and set scnee") 
       
@@ -300,7 +284,8 @@ for cnt in range(NumSimulationsToRun):
     #...........Set Scene and camera postion..........................................................
         SetScene.RandomlySetCameraPos(name="Camera",VesWidth = MaxXY,VesHeight = MaxZ)
         with open(OutputFolder+'/CameraParameters.json', 'w') as fp: json.dump( SetScene.CameraParamtersToDictionary(), fp)
-                
+        if np.random.rand()<0.1:
+            SetScene.add_random_point_light()
 ######################################################################################################################3
 
 # Generate images of same scene with different materials ratio
@@ -312,6 +297,8 @@ for cnt in range(NumSimulationsToRun):
             #------------Modify scene scene----------------------------------------------------------------------------------  
                 if nscenes>1: 
                     SetScene.RandomRotateBackground() # for scene beyond 2 start randomly  rotating background between scenes
+                    if np.random.rand()<0.1:
+                               SetScene.add_random_point_light()
                 if nscenes>3: 
                     SetScene.AddBackground(hdr_list)# for scene beyond 3 replace background between frames  
                       
@@ -402,7 +389,7 @@ for cnt in range(NumSimulationsToRun):
     print("========================Finished==================================")
     SetScene.CleanScene()  # Delete all objects in scence
     scounter+=1
-    if use_priodical_exits and scounter>=12: # Break program and exit blender, allow blender to remove junk, otherwise the program might start to slow down (assume it run in loop inside run.sh)
+    if use_priodical_exits and scounter>=20: # Break program and exit blender, allow blender to remove junk, otherwise the program might start to slow down (assume it run in loop inside run.sh)
             #  print("Resting for a minute")
             #  time.sleep(30)
               break
