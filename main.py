@@ -64,21 +64,32 @@ import colorsys
 # Example HDRI_BackGroundFolder and PBRMaterialsFolder  and ObjectsFolder folders should be in the same folder as the script. 
 #------------------------Input parameters---------------------------------------------------------------------
 
-HDRI_BackGroundFolder=r"HDRI_BackGround/"
-#r"/home/breakeroftime/Documents/Datasets/DataForVirtualDataSet/4k_HDRI/4k/" 
-#ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ShapeNetCoreV2/"
-#Folder of objects (like shapenet) 
-ObjectFolder=r"Objects/"
-#ObjectFolder=r"/home/breakeroftime/Documents/Datasets/Shapenet/ObjectGTLF_NEW/" 
-# folder where out put will be save
+
+
+#HDRI_BackGroundFolder=r"/media/glod/6TB/Materials_Assets/4k/"  # Background hdri folder (taken from HDRI Haven site)
+#ObjectFolder=r"/media/glod/6TB/Materials_Assets/ObjectGTLF_NEW/"  #Folder of objects (like shapenet) 
+#pbr_folders = [
+#                r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/generated_pbr_dms_V/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/generated_pbr_dms_2/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/merged_pbr_dms_2/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/merged_pbr_dms_3_V/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/generated_pbr_dms_3_V/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/pbr_openimages_0_large_v/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/pbr_openimages_2_large_1_V/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/MIX_pbr_openimages_0_large/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/MIX_pbr_openimages_2_large_1_v/"
+#               ,r"/media/glod/6TB/Materials_Assets/GeneratedPBRs_And_Textures/pbr_openimages_1_large_1_v/" 
+#               ]
+
+
+#************************************************************
+HDRI_BackGroundFolder=r"HDRI_BackGround/" # background HDRI (HDRI haven)
+ObjectFolder=r"Objects/" # 3d objects preferably GTLF
 OutFolder="OutFolder/" # folder where out put will be save
 pbr_folders = ['PBRMaterials/'] # folders with PBR materiall each folder will be use with equal chance
-#pbr_folders = [r"/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR/",
-#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/',
-#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/',
-#r'/mnt/306deddd-38b0-4adc-b1ea-dcd5efc989f3/Materials_Assets/NormalizedPBR_MERGED/']
 
-NumSetsToRender=100
+
+NumSetsToRender=20 # number of sets to render (will skip existing)
 #------------------Input parameters--------------------------------------------------------------------------------------
 #OutFolder=homedir+r"/Output/"# Where output images will be saved
 #HDRI_BackGroundFolder="HDRI_BackGround/"# Background hdri folder
@@ -249,11 +260,11 @@ for cnt in range(NumSetsToRender):
        #-------------------------------------------Create ground plane and assign materials to it----------------------------------
         if np.random.rand()<0.33:
             PlaneSx,PlaneSy= SetScene.AddGroundPlane("Ground",x0=0,y0=0,z0=-VesselWallThikness*(np.random.rand()*0.75+0.25)-0.1,sx=MaxXY,sy=MaxXY) # Add plane for ground
-            if np.random.rand()<0.8:
-                Materials.load_random_PBR_material(bpy.data.materials['GroundMaterial'].node_tree,materials_lst)
-                Materials.ReplaceMaterial(bpy.data.objects["Ground"],bpy.data.materials['GroundMaterial'])  
-            else: 
-                Materials.AssignMaterialBSDFtoObject(ObjectName="Ground",MaterialName="BSDFMaterial") 
+            #if np.random.rand()<0.8:
+            Materials.load_random_PBR_material(bpy.data.materials['GroundMaterial'].node_tree,materials_lst)
+            Materials.ReplaceMaterial(bpy.data.objects["Ground"],bpy.data.materials['GroundMaterial'])  
+            #else: 
+             #   Materials.AssignMaterialBSDFtoObject(ObjectName="Ground",MaterialName="BSDFMaterial") 
         else: 
             with open(OutputFolder+'/NoGroundPlane.txt', 'w'): print("No Ground Plane")
             PlaneSx,PlaneSy=MaxXY*(np.random.rand()*4+2), MaxXY*(np.random.rand()*4+2)
