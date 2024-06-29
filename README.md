@@ -14,7 +14,7 @@ The general work on the script is loading Objects background and two materials. 
 
 # What you need
 ## Hardware + Software
-The script was run with Blender 3.1 with no add-ons, it can run with GPU or CPU but run much faster with a strong GPU.
+The script was updated to work with blender 4.1 with no add-ons, it can run with GPU or CPU but run much faster with a strong GPU.
 
 ## CGI Assets  
 Objects Folder, HDRI background folder, and a folder of PBR materials. Example folders are supplied as: “HDRI_BackGround”, “PBRMaterials”, and “Objects”. 
